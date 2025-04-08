@@ -1,8 +1,8 @@
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext } from "react";
 import { Notification } from "../types";
-import { notifications } from "../data/sampleData";
 import { useAuth } from "./AuthContext";
+import { useNotificationsState } from "../hooks/useNotificationsState";
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -16,55 +16,11 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const [userNotifications, setUserNotifications] = useState<Notification[]>([]);
+  const notificationState = useNotificationsState(user);
   
-  useEffect(() => {
-    if (user) {
-      // In a real app, we would fetch notifications from an API
-      // For demo, we're using sample data
-      const userNotifs = notifications.filter(n => n.userId === user.id);
-      setUserNotifications(userNotifs);
-    } else {
-      setUserNotifications([]);
-    }
-  }, [user]);
-
-  const unreadCount = userNotifications.filter(n => !n.read).length;
-
-  const markAsRead = (id: string) => {
-    setUserNotifications(prev => 
-      prev.map(n => 
-        n.id === id ? { ...n, read: true } : n
-      )
-    );
-  };
-
-  const markAllAsRead = () => {
-    setUserNotifications(prev => 
-      prev.map(n => ({ ...n, read: true }))
-    );
-  };
-
-  const addNotification = (notification: Omit<Notification, "id" | "createdAt" | "read">) => {
-    const newNotification: Notification = {
-      ...notification,
-      id: `notif-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      read: false
-    };
-    
-    setUserNotifications(prev => [newNotification, ...prev]);
-  };
-
   return (
     <NotificationContext.Provider
-      value={{
-        notifications: userNotifications,
-        unreadCount,
-        markAsRead,
-        markAllAsRead,
-        addNotification
-      }}
+      value={notificationState}
     >
       {children}
     </NotificationContext.Provider>
