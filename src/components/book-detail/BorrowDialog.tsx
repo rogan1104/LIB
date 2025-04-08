@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { format, addDays } from "date-fns";
 
 interface BorrowDialogProps {
   open: boolean;
@@ -20,13 +21,17 @@ interface BorrowDialogProps {
 const BorrowDialog: React.FC<BorrowDialogProps> = ({ open, setOpen, bookTitle }) => {
   const navigate = useNavigate();
   
+  // Calculate due date (14 days from today)
+  const dueDate = addDays(new Date(), 14);
+  const formattedDueDate = format(dueDate, "MMMM d, yyyy");
+  
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Book Borrowed Successfully!</DialogTitle>
           <DialogDescription>
-            You have successfully borrowed "{bookTitle}". The due date is 14 days from today.
+            You have successfully borrowed "{bookTitle}". The due date is {formattedDueDate}.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
