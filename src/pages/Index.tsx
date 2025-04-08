@@ -6,6 +6,7 @@ import { ArrowRight, BookOpen, Search, User, BookCheck } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BookList from "@/components/BookList";
+import BookCard from "@/components/BookCard";
 import SearchBar from "@/components/SearchBar";
 import { useLibrary } from "@/context/LibraryContext";
 
