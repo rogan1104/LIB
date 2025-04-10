@@ -29,14 +29,14 @@ const BookDetail = () => {
       const foundBook = getBookById(id);
       if (foundBook) {
         setBook(foundBook);
-        // Find related books by same author
-        const booksByAuthor = books ? 
+        // Find related books by same genre instead of author
+        const booksByGenre = books ? 
           books.filter(b => 
             b.id !== id && 
-            b.author === foundBook.author
+            b.genre === foundBook.genre
           ).slice(0, 3) : 
           [];
-        setRelatedBooks(booksByAuthor);
+        setRelatedBooks(booksByGenre);
       } else {
         setError("Book not found");
       }
@@ -100,25 +100,29 @@ const BookDetail = () => {
           {/* Book Information */}
           <div className="md:col-span-2">
             <BookInfo book={book} />
-            
-            {/* Borrow Button - Now handled in BookCover component */}
           </div>
         </div>
         
-        {/* Related Books Section */}
+        {/* Related Books Section - Updated to show books by genre with image and title */}
         {relatedBooks.length > 0 && (
           <div className="mt-16">
-            <h2 className="text-2xl font-bold mb-6">More by this Author</h2>
+            <h2 className="text-2xl font-bold mb-6">More from {book.genre} genre</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {relatedBooks.map(book => (
-                <div key={book.id} onClick={() => navigate(`/books/${book.id}`)} className="cursor-pointer">
-                  <img 
-                    src={book.coverImage} 
-                    alt={book.title}
-                    className="w-full h-64 object-cover rounded-md shadow-md hover:shadow-lg transition-shadow"
-                  />
-                  <h3 className="mt-3 font-semibold">{book.title}</h3>
-                  <p className="text-gray-600">{book.author}</p>
+              {relatedBooks.map(relatedBook => (
+                <div 
+                  key={relatedBook.id} 
+                  onClick={() => navigate(`/books/${relatedBook.id}`)} 
+                  className="cursor-pointer group"
+                >
+                  <div className="relative overflow-hidden rounded-md shadow-md hover:shadow-lg transition-shadow">
+                    <img 
+                      src={relatedBook.coverImage} 
+                      alt={`Cover of ${relatedBook.title}`}
+                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-200"
+                    />
+                  </div>
+                  <h3 className="mt-3 font-semibold text-lg group-hover:text-library-primary transition-colors">{relatedBook.title}</h3>
+                  <p className="text-gray-600">{relatedBook.author}</p>
                 </div>
               ))}
             </div>
