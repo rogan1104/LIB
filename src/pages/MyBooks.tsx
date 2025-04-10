@@ -40,6 +40,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Calendar,
   Check,
   Clock,
@@ -55,9 +63,13 @@ import {
 const MyBooks = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const { userBorrows, getBookById, returnBook, extendBorrow, calculateFine, makePayment } = useLibrary();
+  const { userBorrows, getBookById, returnBook, extendBorrow, calculateFine, makePayment, payments } = useLibrary();
   
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [paymentSimulation, setPaymentSimulation] = useState(false);
+  const [selectedBorrow, setSelectedBorrow] = useState<any>(null);
+  const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState<number | null>(null);
   
   if (!isAuthenticated) {
     navigate("/login");
@@ -89,15 +101,35 @@ const MyBooks = () => {
     }
   };
   
-  const handlePayFine = async (borrowId: string, amount: number) => {
-    setActionLoading(borrowId);
+  const handlePayFine = (borrowId: string, amount: number) => {
+    const borrow = userBorrows.find(b => b.id === borrowId);
+    if (!borrow) return;
+    
+    setSelectedBorrow(borrow);
+    setPaymentAmount(amount);
+    setPaymentSimulation(true);
+  };
+  
+  const processPayment = async () => {
+    if (!selectedBorrow || !paymentAmount || !paymentMethod) return;
+    
+    setActionLoading(selectedBorrow.id);
     try {
-      await makePayment(borrowId, amount);
+      await makePayment(selectedBorrow.id, paymentAmount);
+      
+      // Close the payment dialog
+      setPaymentSimulation(false);
+      setSelectedBorrow(null);
+      setPaymentMethod(null);
     } catch (error) {
       console.error(error);
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const selectPaymentMethod = (method: string) => {
+    setPaymentMethod(method);
   };
   
   const isOverdue = (dueDate: string) => {
@@ -306,39 +338,19 @@ const MyBooks = () => {
                                       
                                       {/* Pay Fine */}
                                       {fine > 0 && (
-                                        <AlertDialog>
-                                          <AlertDialogTrigger asChild>
-                                            <Button 
-                                              variant="destructive" 
-                                              size="sm" 
-                                              disabled={actionLoading === borrow.id}
-                                            >
-                                              {actionLoading === borrow.id ? (
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                              ) : (
-                                                <CreditCard className="h-4 w-4" />
-                                              )}
-                                              <span className="sr-only md:not-sr-only md:ml-2">Pay Fine</span>
-                                            </Button>
-                                          </AlertDialogTrigger>
-                                          <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                              <AlertDialogTitle>Pay Fine</AlertDialogTitle>
-                                              <AlertDialogDescription>
-                                                Pay the overdue fine of ${fine.toFixed(2)} for "{book?.title}"?
-                                              </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                              <AlertDialogAction
-                                                onClick={() => handlePayFine(borrow.id, fine)}
-                                                className="bg-library-primary hover:bg-library-secondary"
-                                              >
-                                                Pay Fine
-                                              </AlertDialogAction>
-                                            </AlertDialogFooter>
-                                          </AlertDialogContent>
-                                        </AlertDialog>
+                                        <Button 
+                                          variant="destructive" 
+                                          size="sm" 
+                                          disabled={actionLoading === borrow.id}
+                                          onClick={() => handlePayFine(borrow.id, fine)}
+                                        >
+                                          {actionLoading === borrow.id ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                          ) : (
+                                            <CreditCard className="h-4 w-4" />
+                                          )}
+                                          <span className="sr-only md:not-sr-only md:ml-2">Pay Fine</span>
+                                        </Button>
                                       )}
                                       
                                       {/* View Book Details */}
@@ -476,6 +488,63 @@ const MyBooks = () => {
           </div>
         </section>
       </main>
+      
+      {/* Payment Dialog */}
+      <Dialog open={paymentSimulation} onOpenChange={setPaymentSimulation}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Pay Fine</DialogTitle>
+            <DialogDescription>
+              Select a payment method to pay your fine.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <Button
+              variant={paymentMethod === "credit" ? "default" : "outline"}
+              className="flex flex-col items-center justify-center h-24"
+              onClick={() => selectPaymentMethod("credit")}
+            >
+              <CreditCard className="h-8 w-8 mb-2" />
+              <span>Credit Card</span>
+            </Button>
+            
+            <Button
+              variant={paymentMethod === "paypal" ? "default" : "outline"}
+              className="flex flex-col items-center justify-center h-24"
+              onClick={() => selectPaymentMethod("paypal")}
+            >
+              <svg className="h-8 w-8 mb-2" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.146-.043.299-.066.451-.934 6.323-6.273 7.073-9.511 7.073H8.672c-.398 0-.736.29-.798.686L7.076 21.337zm2.96-17.747a.641.641 0 0 0-.633.74l1.235 7.827a.64.64 0 0 0 .632.54h1.69c2.87 0 6.144-.9 6.761-5.115.035-.96.051-.18.065-.267.212-1.296-.076-2.086-.63-2.653-.576-.589-1.623-1.072-3.21-1.072h-5.91zm7.878 15.764c-.013-.432-.284-.788-.671-.9-1.933-.56-3.677.397-4.621 1.039a.397.397 0 0 0-.106.1.325.325 0 0 0-.073.412c.245.391.867.56 1.533.56 1.097 0 2.068-.398 2.72-.882.645-.477 1.158-1.15 1.218-1.616v-.713z"/>
+              </svg>
+              <span>PayPal</span>
+            </Button>
+          </div>
+          
+          <DialogFooter className="flex-col sm:justify-between sm:space-x-0">
+            <div className="flex flex-col w-full space-y-2">
+              <div className="flex justify-between items-center px-2 py-1 bg-gray-50 rounded">
+                <span className="text-sm">Fine amount:</span>
+                <span className="font-medium">${paymentAmount?.toFixed(2)}</span>
+              </div>
+              
+              <Button 
+                type="button" 
+                disabled={!paymentMethod || actionLoading === selectedBorrow?.id}
+                onClick={processPayment}
+                className="w-full"
+              >
+                {actionLoading === selectedBorrow?.id ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <CreditCard className="h-4 w-4 mr-2" />
+                )}
+                Pay Fine
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <Footer />
     </div>
