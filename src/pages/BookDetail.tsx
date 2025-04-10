@@ -16,12 +16,13 @@ const BookDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const { getBookById, borrowBook, isLoading } = useLibrary();
+  const { getBookById, borrowBook, isLoading, books } = useLibrary();
   
   const [book, setBook] = useState(id ? getBookById(id) : undefined);
   const [isBorrowDialogOpen, setIsBorrowDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [relatedBooks, setRelatedBooks] = useState<any[]>([]);
+  const [borrowLoading, setBorrowLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -29,8 +30,8 @@ const BookDetail = () => {
       if (foundBook) {
         setBook(foundBook);
         // Find related books by same author
-        const booksByAuthor = getBookById ? 
-          bookList.filter(b => 
+        const booksByAuthor = books ? 
+          books.filter(b => 
             b.id !== id && 
             b.author === foundBook.author
           ).slice(0, 3) : 
@@ -40,7 +41,7 @@ const BookDetail = () => {
         setError("Book not found");
       }
     }
-  }, [id, getBookById]);
+  }, [id, getBookById, books]);
 
   const handleBorrow = async () => {
     if (!isAuthenticated) {
@@ -56,6 +57,7 @@ const BookDetail = () => {
     if (!book) return;
 
     try {
+      setBorrowLoading(true);
       await borrowBook(book.id);
       setIsBorrowDialogOpen(true);
     } catch (error) {
@@ -64,15 +66,17 @@ const BookDetail = () => {
         description: error instanceof Error ? error.message : "Failed to borrow book",
         variant: "destructive",
       });
+    } finally {
+      setBorrowLoading(false);
     }
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <ErrorState type="loading" />;
   }
 
   if (error || !book) {
-    return <ErrorState message={error || "Book not found"} />;
+    return <ErrorState type="notFound" />;
   }
 
   return (
@@ -83,26 +87,21 @@ const BookDetail = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Book Cover */}
           <div className="md:col-span-1">
-            <BookCover book={book} />
+            <BookCover 
+              book={book}
+              isAuthenticated={isAuthenticated}
+              borrowLoading={borrowLoading}
+              handleBorrow={handleBorrow}
+              setDialogOpen={setIsBorrowDialogOpen}
+              dialogOpen={isBorrowDialogOpen}
+            />
           </div>
           
           {/* Book Information */}
           <div className="md:col-span-2">
             <BookInfo book={book} />
             
-            {/* Borrow Button */}
-            <div className="mt-8">
-              <Button
-                onClick={handleBorrow}
-                disabled={book.availableCopies <= 0}
-                className="w-full md:w-auto bg-library-primary hover:bg-library-secondary"
-                size="lg"
-              >
-                {book.availableCopies > 0
-                  ? "Borrow This Book"
-                  : "Currently Unavailable"}
-              </Button>
-            </div>
+            {/* Borrow Button - Now handled in BookCover component */}
           </div>
         </div>
         
