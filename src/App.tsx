@@ -18,6 +18,8 @@ import Signup from "./pages/Signup";
 import MyBooks from "./pages/MyBooks";
 import Notifications from "./pages/Notifications";
 import Admin from "./pages/Admin";
+import Profile from "./pages/Profile";
+import Payments from "./pages/Payments";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +41,8 @@ const App = () => (
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/my-books" element={<MyBooks />} />
                 <Route path="/notifications" element={<Notifications />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/payments" element={<Payments />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

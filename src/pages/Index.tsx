@@ -9,10 +9,12 @@ import BookList from "@/components/BookList";
 import BookCard from "@/components/BookCard";
 import SearchBar from "@/components/SearchBar";
 import { useLibrary } from "@/context/LibraryContext";
+import { useAuth } from "@/context/AuthContext";
 
 const Index = () => {
   const navigate = useNavigate();
   const { books, searchBooks } = useLibrary();
+  const { isAuthenticated } = useAuth();
   
   const handleSearch = (query: string) => {
     searchBooks(query);
@@ -44,15 +46,17 @@ const Index = () => {
                 <BookOpen className="mr-2 h-5 w-5" />
                 Browse Books
               </Button>
-              <Button 
-                onClick={() => navigate("/signup")}
-                variant="outline"
-                className="text-lg px-6 py-6 border-white text-white hover:bg-white hover:text-library-primary"
-                size="lg"
-              >
-                <User className="mr-2 h-5 w-5" />
-                Sign Up Now
-              </Button>
+              {!isAuthenticated && (
+                <Button 
+                  onClick={() => navigate("/signup")}
+                  variant="outline"
+                  className="text-lg px-6 py-6 border-white text-white hover:bg-white hover:text-library-primary"
+                  size="lg"
+                >
+                  <User className="mr-2 h-5 w-5" />
+                  Sign Up Now
+                </Button>
+              )}
             </div>
           </div>
         </section>
@@ -138,14 +142,25 @@ const Index = () => {
             <p className="text-lg mb-8 max-w-2xl mx-auto">
               Create your free account today and get access to thousands of books in our library.
             </p>
-            <Button
-              onClick={() => navigate("/signup")}
-              size="lg"
-              className="bg-white text-library-primary hover:bg-library-light"
-            >
-              Sign Up Now
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
+            {!isAuthenticated ? (
+              <Button
+                onClick={() => navigate("/signup")}
+                size="lg"
+                className="bg-white text-library-primary hover:bg-library-light"
+              >
+                Sign Up Now
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            ) : (
+              <Button
+                onClick={() => navigate("/books")}
+                size="lg"
+                className="bg-white text-library-primary hover:bg-library-light"
+              >
+                Browse Books
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            )}
           </div>
         </section>
       </main>
