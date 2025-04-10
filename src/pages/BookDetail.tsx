@@ -16,12 +16,11 @@ const BookDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const { getBookById, borrowBook, isLoading, books } = useLibrary();
+  const { getBookById, borrowBook, isLoading } = useLibrary();
   
   const [book, setBook] = useState(id ? getBookById(id) : undefined);
   const [isBorrowDialogOpen, setIsBorrowDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [relatedBooks, setRelatedBooks] = useState<any[]>([]);
   const [borrowLoading, setBorrowLoading] = useState(false);
 
   useEffect(() => {
@@ -29,19 +28,11 @@ const BookDetail = () => {
       const foundBook = getBookById(id);
       if (foundBook) {
         setBook(foundBook);
-        // Find related books by same genre instead of author
-        const booksByGenre = books ? 
-          books.filter(b => 
-            b.id !== id && 
-            b.genre === foundBook.genre
-          ).slice(0, 3) : 
-          [];
-        setRelatedBooks(booksByGenre);
       } else {
         setError("Book not found");
       }
     }
-  }, [id, getBookById, books]);
+  }, [id, getBookById]);
 
   const handleBorrow = async () => {
     if (!isAuthenticated) {
@@ -102,32 +93,6 @@ const BookDetail = () => {
             <BookInfo book={book} />
           </div>
         </div>
-        
-        {/* Related Books Section - Updated to show books by genre with image and title */}
-        {relatedBooks.length > 0 && (
-          <div className="mt-16">
-            <h2 className="text-2xl font-bold mb-6">More from {book.genre} genre</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {relatedBooks.map(relatedBook => (
-                <div 
-                  key={relatedBook.id} 
-                  onClick={() => navigate(`/books/${relatedBook.id}`)} 
-                  className="cursor-pointer group"
-                >
-                  <div className="relative overflow-hidden rounded-md shadow-md hover:shadow-lg transition-shadow">
-                    <img 
-                      src={relatedBook.coverImage} 
-                      alt={`Cover of ${relatedBook.title}`}
-                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-200"
-                    />
-                  </div>
-                  <h3 className="mt-3 font-semibold text-lg group-hover:text-library-primary transition-colors">{relatedBook.title}</h3>
-                  <p className="text-gray-600">{relatedBook.author}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
         
         {/* Borrow Dialog */}
         <BorrowDialog

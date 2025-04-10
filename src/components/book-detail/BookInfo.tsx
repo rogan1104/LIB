@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tag, Calendar } from "lucide-react";
 import { Book } from "@/types";
 import { useNavigate } from "react-router-dom";
+import { useLibrary } from "@/context/LibraryContext";
 
 interface BookInfoProps {
   book: Book;
@@ -46,28 +47,48 @@ const BookInfo = ({ book }: BookInfoProps) => {
           </p>
         </div>
         
-        <RelatedBooks bookId={book.id} />
+        <RelatedBooks bookId={book.id} genre={book.genre} />
       </div>
     </div>
   );
 };
 
-const RelatedBooks = ({ bookId }: { bookId: string }) => {
+const RelatedBooks = ({ bookId, genre }: { bookId: string, genre: string }) => {
   const navigate = useNavigate();
+  const { books } = useLibrary();
+  
+  // Find related books by the same genre
+  const relatedBooks = books ? 
+    books
+      .filter(b => b.id !== bookId && b.genre === genre)
+      .slice(0, 3) : 
+    [];
+  
+  if (relatedBooks.length === 0) {
+    return null;
+  }
   
   return (
     <div className="mt-8">
       <h2 className="text-xl font-semibold mb-4">You might also like</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Array.from({ length: 3 }).map((_, idx) => (
+        {relatedBooks.map((book) => (
           <div 
-            key={idx}
-            className="rounded-lg bg-white shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => navigate(`/books/book-${(parseInt(bookId.split('-')[1]) % 25) + idx + 1}`)}
+            key={book.id}
+            className="rounded-lg bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow group"
+            onClick={() => navigate(`/books/${book.id}`)}
           >
-            <div className="h-24 bg-library-accent rounded mb-2"></div>
-            <p className="font-medium truncate">Related Book {idx + 1}</p>
-            <p className="text-xs text-muted-foreground">Similar Genre</p>
+            <div className="relative overflow-hidden rounded-t-lg">
+              <img 
+                src={book.coverImage} 
+                alt={`Cover of ${book.title}`}
+                className="w-full h-36 object-cover group-hover:scale-105 transition-transform duration-200"
+              />
+            </div>
+            <div className="p-3">
+              <p className="font-medium text-sm line-clamp-1 group-hover:text-library-primary transition-colors">{book.title}</p>
+              <p className="text-xs text-muted-foreground">by {book.author}</p>
+            </div>
           </div>
         ))}
       </div>
