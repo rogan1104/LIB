@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -17,6 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UserRole } from "@/types";
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -37,9 +38,18 @@ const Signup = () => {
     setError("");
     
     try {
-      // Simple validation
-      if (!firstName || !lastName || !email || !password) {
-        setError("All fields are required");
+      if (!firstName || firstName.trim().length < 2) {
+        setError("First name must be at least 2 characters");
+        return;
+      }
+      
+      if (!lastName || lastName.trim().length < 2) {
+        setError("Last name must be at least 2 characters");
+        return;
+      }
+      
+      if (!emailRegex.test(email)) {
+        setError("Invalid email format");
         return;
       }
       
@@ -62,7 +72,7 @@ const Signup = () => {
       setSuccess(true);
       
       // In a real app, the user would receive a verification email
-      // For the demo, we'll just show a success message and navigate to login
+      // For the demo, we'll just show a success message and navigate to loginq
       setTimeout(() => {
         navigate("/login");
       }, 3000);

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -23,9 +22,14 @@ const Login = () => {
     setError("");
     
     try {
-      // For demo, we'll allow login with any email that exists in the sample data
       if (email.trim() === "") {
         setError("Email is required");
+        return;
+      }
+      
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setError("Invalid email format");
         return;
       }
       

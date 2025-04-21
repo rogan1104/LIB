@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, UserRole } from "../types";
 import { users } from "../data/sampleData";
@@ -37,7 +36,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // In a real app, this would be an API call
       // For demo, we're just using the sample data
       const foundUser = users.find(u => u.email === email);
-      
       if (!foundUser) {
         throw new Error("Invalid email or password");
       }
